@@ -6,6 +6,14 @@
 //    - des fonctions communes (création tubes, écriture dans un tube,
 //      manipulation de sémaphores, ...)
 
+#define FICHIER_SEMAPHORE_CLIENT "master_client.h"
+#define PROJ_ID 5
+
+#define TUBE_CLIENT_MASTER "tube_client_master"
+#define TUBE_MASTER_CLIENT "tube_master_client"
+
+
+
 // ordres possibles pour le master
 #define ORDER_NONE                0
 #define ORDER_STOP               -1
@@ -20,5 +28,5 @@
 
 
 //ceci est un test pour git
-//est ce que ça marche ?
+//est ce que ça marche ? oui je pense
 #endif
