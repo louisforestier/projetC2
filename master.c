@@ -69,8 +69,8 @@ void loop(int mutex)
   // voyez-vous pourquoi ?
   bool end = false;
   while(!end) {
-    int tube_c_m = open_tube1();
-    int tube_m_c = open_tube2();
+    int tube_c_m = open_tube_lecture(TUBE_CLIENT_MASTER);
+    int tube_m_c = open_tube_ecriture(TUBE_MASTER_CLIENT);
 
     int order;
     int nb_test;
@@ -82,22 +82,22 @@ void loop(int mutex)
 	printf("il ne se passe rien\n");
 	write_tube(tube_m_c, &reponse);
 	break;
-      case -1 :
+      case ORDER_STOP :
 	printf("envoie ordre de fin au premier worker\n");
 	end = true;
 	write_tube(tube_m_c, &reponse);
 	break;
-      case 1 :
+      case ORDER_COMPUTE_PRIME :
 	read_tube(tube_c_m, &nb_test);
 	printf("construit pipeline\n");
 	reponse = 42;
 	write_tube(tube_m_c, &reponse);
 	break;
-      case 2 :
+      case ORDER_HOW_MANY_PRIME :
 	printf("il y a pas encore de nombre premier calculer\n");
 	write_tube(tube_m_c, &reponse);
 	break;
-      case 3 :
+      case ORDER_HIGHEST_PRIME :
 	printf("le plus grand est 2\n");
 	write_tube(tube_m_c, &reponse);
 	break;

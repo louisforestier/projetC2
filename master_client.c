@@ -42,17 +42,17 @@ void create_tube2(){
 //==========================================================================
 //ouverture tubes nommés
 
-int open_tube1()
+int open_tube_lecture(char * file)
 {
-  int tube1 = open(TUBE_CLIENT_MASTER, O_RDONLY);
+  int tube1 = open(file, O_RDONLY);
   assert(tube1 != -1);
   printf("le tube vient d'etre ouvert en lecture\n");
   return tube1;
 }
 
-int open_tube2()
+int open_tube_ecriture(char * file)
 {
-  int tube2 = open(TUBE_MASTER_CLIENT, O_WRONLY);
+  int tube2 = open(file, O_WRONLY);
   assert(tube2 != -1);
   printf("le tube vient d'etre ouvert en ecriture\n");
   return tube2;
