@@ -74,16 +74,18 @@ void loop(int mutex)
 
     int order;
     int nb_test;
-    int reponse;
+    int reponse = -1;
     read_tube(tube_c_m, &order);
     switch(order)
       {
-      case 0 :
+      case ORDER_NONE :
 	printf("il ne se passe rien\n");
+	write_tube(tube_m_c, &reponse);
 	break;
       case -1 :
 	printf("envoie ordre de fin au premier worker\n");
 	end = true;
+	write_tube(tube_m_c, &reponse);
 	break;
       case 1 :
 	read_tube(tube_c_m, &nb_test);
@@ -93,9 +95,11 @@ void loop(int mutex)
 	break;
       case 2 :
 	printf("il y a pas encore de nombre premier calculer\n");
+	write_tube(tube_m_c, &reponse);
 	break;
       case 3 :
 	printf("le plus grand est 2\n");
+	write_tube(tube_m_c, &reponse);
 	break;
       default : printf("cette commande ne correspond à rien\n");
       }

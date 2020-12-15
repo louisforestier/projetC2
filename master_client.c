@@ -29,7 +29,7 @@
 void create_tube1()
 {
   int tube1 = mkfifo(TUBE_CLIENT_MASTER, 0641);
-  assert(tube1 != -1);
+  myassert(tube1 != -1, "pk ca plante");
   printf("le tube client master vient d'etre crée\n");
 }
 
