@@ -30,9 +30,9 @@ void create_tube1();
 
 void create_tube2();
 
-int open_tube1();
+int open_tube_lecture();
 
-int open_tube2();
+int open_tube_ecriture();
 
 void write_tube(int tube, int * result);
 

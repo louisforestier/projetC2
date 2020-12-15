@@ -105,8 +105,6 @@ int main(int argc, char * argv[])
     int section_critique_id = my_semget(PROJ_ID_SEC_CRITIQUE);
 
 
-    printf("%d\n", order); // pour éviter le warning
-
     // order peut valoir 5 valeurs (cf. master_client.h) :
     //      - ORDER_COMPUTE_PRIME_LOCAL
     //      - ORDER_STOP
@@ -138,16 +136,26 @@ int main(int argc, char * argv[])
     if (order ==  ORDER_COMPUTE_PRIME_LOCAL) {
       printf("code multi thread\n");
     } else {
+      printf("%d\n", order);
       int answer;
       prendre(section_critique_id);
-      int tube_c_m = open_tube1();
-      int tube_m_c = open_tube2();
+      printf("debut section critique\n");
+
+      int tube_c_m = open_tube_ecriture(TUBE_CLIENT_MASTER);
+      printf("ouverture tube1\n");
+
+      int tube_m_c = open_tube_lecture(TUBE_MASTER_CLIENT);
+      printf("ouverture tube2\n");
 
       write_tube(tube_c_m,&order);
       if (order == ORDER_COMPUTE_PRIME)
 	write_tube(tube_c_m, &number);
+      printf("avant read\n");
+
       read_tube(tube_m_c, &answer);
       vendre(section_critique_id);
+      printf("fin section critique\n");
+
       closetube(tube_c_m);
       closetube(tube_m_c);
       vendre(synchro_id);

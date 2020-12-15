@@ -57,6 +57,46 @@ void loop(/* paramètres */)
     //           - le nombre n'est pas premier
     //           - s'il y a un worker suivant lui transmettre le nombre
     //           - s'il n'y a pas de worker suivant, le créer
+  /* bool end = false; */
+  /* int n; */
+  /* while(!end){ */
+  /*   read_tube(tube_ordre, &n); */
+  /*   if (n == -1){ */
+  /*     if (tube_suivant != -1){ */
+  /* 	int status; */
+  /* 	write_tube(tube_suivant, &n); */
+  /* 	int wait_return = wait(&status); */
+  /* 	myassert(wait_return != -1, "pas de fils à attendre"); */
+  /*     } */
+  /*     end = true; */
+      
+  /*   } else { */
+  /*     int result; */
+  /*     if (n == p){ */
+  /* 	result = IS_PRIME; */
+  /* 	write_tube(tube_w_m, &result); */
+  /*     } else if (n % p == 0){ */
+  /* 	result = IS_NOT_PRIME; */
+  /* 	write_tube(tube_w_m, &result); */
+  /*     } else if (fils != -1){ */
+  /* 	write_tube(tube_suivant, &n); */
+  /*     } else { */
+  /* 	int s_pid = fork(); */
+  /* 	myassert(s_pid != -1, "création de worker échouée"); */
+  /* 	if (s_pid == 0){ */
+  /* 	    char s_tube_precedent[12]; */
+  /* 	    char s_tube_w_m[12]; */
+  /* 	    char s_p[12]; */
+  /* 	    sprintf(s_tube_precedent, "%d", tube_precedent); */
+  /* 	    sprintf(s_tube_w_m, "%d", tube_w_m); */
+  /* 	    sprintf(s_n, "%d", n); */
+  /* 	    char * argv[] = {"worker" , s_tube_precedent , s_tube_w_m, s_n, NULL } ; */
+  /* 	    int execv_return = execv("somme", argv); */
+  /* 	    assert(execv_return == 0); */
+  /* 	} */
+  /*     } */
+  /*   } */ 
+  /* } */
 }
 
 /************************************************************************
