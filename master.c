@@ -69,44 +69,26 @@ void loop(/* paramÃ¨tres */)
 //===========================================================================
 //création sémaphore pour les clients
 
-static int my_semget(int nbreWorkers)
+static int create_mutex_syncronisation(int nbreWorkers)
 {
-  /* key_t key = ftok(MON_FICHIER,PROJ_ID); */
-  /* assert(key != -1); */
-  /* int s = semget(key, 1, 0641 | IPC_CREAT | IPC_EXCL); */
-  /* assert(s != -1); */
-  /* int init = semctl(s, 0, SETVAL, nbreWorkers); */
-  /* assert(init != -1); */
-  /* return s; */
+  key_t key1 = ftok(FICHIER_SEMAPHORE_CLIENT,PROJ_ID_SYNCRO);
+  assert(key1 != -1);
+  int s = semget(key1, 1, 0641 | IPC_CREAT | IPC_EXCL);
+  assert(s != -1);
+  int init = semctl(s, 1, SETVAL, nbreWorkers);
+  assert(init != -1);
+  return s;
 }
 
-//==========================================================================
-//création et ouverture tubes nommés
-
-static int create_tube1(){
-  mkfifo(TUBE_CLIENT_MASTER, 0666);
-  int tube1 = open(TUBE_CLIENT_MASTER, O_RDONLY);
-  assert(tube1 != -1);
-  printf("le tube vient d'etre ouvert en lecture\n");
-
-  return tube1;
-}
-
-static int create_tube2(){
-  mkfifo(TUBE_MASTER_CLIENT, 0666);
-  int tube2 = open(TUBE_MASTER_CLIENT, O_WRONLY);
-  assert(tube1 != -1);
-  printf("le tube vient d'etre ouvert en ecriture\n");
-  return tube2;
-}
-
-//========================================================================
-//fermeture tube nommés
-
-static void closetube(int tube){
-  int g = close(tube);
-  assert(g == 0);
-  printf("le tube est fermer");
+static int create_mutex_section_critique(int nbreWorkers)
+{
+  key_t key2 = ftok(FICHIER_SEMAPHORE_CLIENT,PROJ_ID_SEC_CRITIQUE);
+  assert(key2 != -1);
+  int s = semget(key2, 1, 0641 | IPC_CREAT | IPC_EXCL);
+  assert(s != -1);
+  int init = semctl(s, 1, SETVAL, nbreWorkers);
+  assert(init != -1);
+  return s;
 }
 
 /************************************************************************
