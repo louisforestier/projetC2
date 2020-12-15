@@ -77,6 +77,17 @@ static int parseArgs(int argc, char * argv[], int *number)
 }
 
 
+static int my_semget(const int id)
+{
+  int key = ftok(FICHIER_SEMAPHORE_CLIENT, id);
+  assert(key != -1); 
+  int semid = semget(key, 1, IPC_EXCL);
+  assert(semid >= 0);
+  
+  return semid;
+}
+
+
 /************************************************************************
  * Fonction principale
  ************************************************************************/
@@ -85,6 +96,10 @@ int main(int argc, char * argv[])
 {
     int number = 0;
     int order = parseArgs(argc, argv, &number);
+    int synchro_id = my_semget(PROJ_ID_SYNCRO);
+    int section_critique_id = my_semget(PROJ_ID_SEC_CRITIQUE);
+
+
     printf("%d\n", order); // pour éviter le warning
 
     // order peut valoir 5 valeurs (cf. master_client.h) :
@@ -114,6 +129,18 @@ int main(int argc, char * argv[])
     //
     // N'hésitez pas à faire des fonctions annexes ; si la fonction main
     // ne dépassait pas une trentaine de lignes, ce serait bien.
+
+    if (order ==  ORDER_COMPUTE_PRIME_LOCAL) {
+      printf("code multi thread\n");
+    } else {
+      prendre(section_critique_id);
+      int tube_c_m = open_tube1();
+      int tube_m_c = open_tube2();
+      write_tube(tube_c_m,order);
+      if (order == ORDER_COMPUTE_PRIME)
+	write_tube(tube_c_m, number);
+      read_tube(tube_m_c
+    }
     
     return EXIT_SUCCESS;
 }

@@ -72,8 +72,8 @@ void write_tube(int tube, int order)
 //========================================================================
 //lecture dans un tube
 
-void read_tube(int tube, int result)
+void read_tube(int tube, int * result)
 {
-  r = read(tube,&result,1);
+  r = read(tube,result,1);
   assert(r >= 0);
 }
