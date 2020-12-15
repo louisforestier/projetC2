@@ -133,13 +133,19 @@ int main(int argc, char * argv[])
     if (order ==  ORDER_COMPUTE_PRIME_LOCAL) {
       printf("code multi thread\n");
     } else {
+      int answer;
       prendre(section_critique_id);
       int tube_c_m = open_tube1();
       int tube_m_c = open_tube2();
+
       write_tube(tube_c_m,order);
       if (order == ORDER_COMPUTE_PRIME)
 	write_tube(tube_c_m, number);
-      read_tube(tube_m_c
+      read_tube(tube_m_c, &answer);
+      vendre(section_critique_id);
+      closetube(tube_c_m);
+      closetube(tube_m_c);
+      vendre(synchro_id);
     }
     
     return EXIT_SUCCESS;
