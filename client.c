@@ -138,9 +138,9 @@ int main(int argc, char * argv[])
       int tube_c_m = open_tube1();
       int tube_m_c = open_tube2();
 
-      write_tube(tube_c_m,order);
+      write_tube(tube_c_m,&order);
       if (order == ORDER_COMPUTE_PRIME)
-	write_tube(tube_c_m, number);
+	write_tube(tube_c_m, &number);
       read_tube(tube_m_c, &answer);
       vendre(section_critique_id);
       closetube(tube_c_m);
