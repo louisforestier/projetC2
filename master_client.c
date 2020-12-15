@@ -73,7 +73,7 @@ void closetube(int tube)
 
 void write_tube(int tube, int * result)
 {
-  int w = write(tube,&result,1);
+  int w = write(tube,result,sizeof(int));
   assert(w != -1);
 }
 
@@ -82,7 +82,7 @@ void write_tube(int tube, int * result)
 
 void read_tube(int tube, int * result)
 {
-  int r = read(tube,result,1);
+  int r = read(tube,result,sizeof(int));
   assert(r >= 0);
 }
 
