@@ -65,8 +65,15 @@ void closetube(int tube)
 
 void write_tube(int tube, int order)
 {
-  write(tube,&order,1);
+  w = write(tube,&order,1);
+  assert(w != -1);
 }
 
 //========================================================================
 //lecture dans un tube
+
+void read_tube(int tube, int result)
+{
+  r = read(tube,&result,1);
+  assert(r >= 0);
+}
