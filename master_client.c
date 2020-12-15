@@ -7,6 +7,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
+#include <sys/stat.h>
+#include <assert.h>
+#include <unistd.h>
+#include <fcntl.h>
+
 #include "myassert.h"
 
 #include "master_client.h"
@@ -20,13 +28,13 @@
 
 void create_tube1()
 {
-  int tube1 = mkfifo(TUBE_CLIENT_MASTER, 0666);
+  int tube1 = mkfifo(TUBE_CLIENT_MASTER, 0641);
   assert(tube1 != -1);
   printf("le tube client master vient d'etre crée\n");
 }
 
 void create_tube2(){
-  int tube2 = mkfifo(TUBE_MASTER_CLIENT, 0666);
+  int tube2 = mkfifo(TUBE_MASTER_CLIENT, 0641);
   assert(tube2 != -1);
   printf("le tube master client vient d'etre crée");
 }
@@ -45,7 +53,7 @@ int open_tube1()
 int open_tube2()
 {
   int tube2 = open(TUBE_MASTER_CLIENT, O_WRONLY);
-  assert(tube1 != -1);
+  assert(tube2 != -1);
   printf("le tube vient d'etre ouvert en ecriture\n");
   return tube2;
 }
@@ -63,9 +71,9 @@ void closetube(int tube)
 //========================================================================
 //écriture dans un tube
 
-void write_tube(int tube, int order)
+void write_tube(int tube, int * result)
 {
-  w = write(tube,&order,1);
+  int w = write(tube,&result,1);
   assert(w != -1);
 }
 
@@ -74,6 +82,26 @@ void write_tube(int tube, int order)
 
 void read_tube(int tube, int * result)
 {
-  r = read(tube,result,1);
+  int r = read(tube,result,1);
   assert(r >= 0);
+}
+
+//===========================================================================
+//attendre pour un semaphore
+
+void prendre(int semId)
+{
+  struct sembuf operation = {0, -1, 0};
+  int ret = semop(semId, &operation, 1);
+  assert(ret != -1);
+}
+
+//===========================================================================
+//vendre pour un semaphore
+
+void vendre(int semId)
+{
+  struct sembuf operation = {0, +1, 0};
+  int ret = semop(semId, &operation, 1);
+  assert(ret != -1);
 }

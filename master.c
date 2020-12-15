@@ -6,6 +6,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
+#include <assert.h>
+
 #include "myassert.h"
 
 #include "master_client.h"
@@ -35,7 +40,7 @@ static void usage(const char *exeName, const char *message)
 /************************************************************************
  * boucle principale de communication avec le client
  ************************************************************************/
-void loop(/* param√®tres */)
+void loop(int mutex)
 {
   // boucle infinie :
   // - ouverture des tubes (cf. rq client.c)
@@ -62,31 +67,70 @@ void loop(/* param√®tres */)
   //
   // il est important d'ouvrir et fermer les tubes nomm√©s √† chaque it√©ration
   // voyez-vous pourquoi ?
-  
+  bool end = false;
+  while(!end) {
+    int tube_c_m = open_tube1();
+    int tube_m_c = open_tube2();
+
+    int order;
+    int nb_test;
+    int reponse;
+    read_tube(tube_c_m, &order);
+    switch(order)
+      {
+      case 0 :
+	printf("il ne se passe rien\n");
+	break;
+      case -1 :
+	printf("envoie ordre de fin au premier worker\n");
+	end = true;
+	break;
+      case 1 :
+	read_tube(tube_c_m, &nb_test);
+	printf("construit pipeline\n");
+	reponse = 42;
+	write_tube(tube_m_c, &reponse);
+	break;
+      case 2 :
+	printf("il y a pas encore de nombre premier calculer\n");
+	break;
+      case 3 :
+	printf("le plus grand est 2\n");
+	break;
+      default : printf("cette commande ne correspond ‡ rien\n");
+      }
+    closetube(tube_c_m);
+    closetube(tube_m_c);
+    prendre(mutex);
+  }
 }
+
+
+
+
 
 
 //===========================================================================
 //crÈation sÈmaphore pour les clients
 
-static int create_mutex_syncronisation(int nbreWorkers)
+static int create_mutex_syncronisation()
 {
   key_t key1 = ftok(FICHIER_SEMAPHORE_CLIENT,PROJ_ID_SYNCRO);
   assert(key1 != -1);
   int s = semget(key1, 1, 0641 | IPC_CREAT | IPC_EXCL);
   assert(s != -1);
-  int init = semctl(s, 1, SETVAL, nbreWorkers);
+  int init = semctl(s, 0, SETVAL, 0);
   assert(init != -1);
   return s;
 }
 
-static int create_mutex_section_critique(int nbreWorkers)
+static int create_mutex_section_critique()
 {
   key_t key2 = ftok(FICHIER_SEMAPHORE_CLIENT,PROJ_ID_SEC_CRITIQUE);
   assert(key2 != -1);
   int s = semget(key2, 1, 0641 | IPC_CREAT | IPC_EXCL);
   assert(s != -1);
-  int init = semctl(s, 1, SETVAL, nbreWorkers);
+  int init = semctl(s, 0, SETVAL, 1);
   assert(init != -1);
   return s;
 }
@@ -101,13 +145,30 @@ int main(int argc, char * argv[])
     usage(argv[0], NULL);
 
   // - cr√©ation des s√©maphores
+  int mutex_syn = create_mutex_syncronisation();
+  int mutex_secc = create_mutex_section_critique();
+  
   // - cr√©ation des tubes nomm√©s
+  create_tube1();
+  create_tube2();
+  
   // - cr√©ation du premier worker
 
   // boucle infinie
-  loop(/* param√®tres */);
+  loop(mutex_syn);
 
   // destruction des tubes nomm√©s, des s√©maphores, ...
+  int d1 = semctl(mutex_syn, -1, IPC_RMID);
+  assert(d1 != -1);
+  int d2 = semctl(mutex_secc, -1, IPC_RMID);
+  assert(d2 != -1);
+  printf("les semaphores sont dÈtruis\n");
+
+  int d3 = remove(TUBE_CLIENT_MASTER);
+  assert(d3 == 0);
+  int d4 = remove(TUBE_MASTER_CLIENT);
+  assert(d4 == 0);
+  printf("les tubes nommÈes ont ÈtÈ dÈtruis\n");
 
   return EXIT_SUCCESS;
 }

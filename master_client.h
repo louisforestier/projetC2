@@ -10,8 +10,8 @@
 #define PROJ_ID_SYNCRO 5
 #define PROJ_ID_SEC_CRITIQUE 22
 
-#define TUBE_CLIENT_MASTER "tube_client_master"
-#define TUBE_MASTER_CLIENT "tube_master_client"
+#define TUBE_CLIENT_MASTER "pipe_cl2ma"
+#define TUBE_MASTER_CLIENT "pipe_ma2cl"
 
 
 
@@ -26,10 +26,22 @@
 // bref n'hésitez à mettre nombre de fonctions avec des noms explicites
 // pour masquer l'implémentation
 
-int create_tube1();
+void create_tube1();
 
-int create_tube2();
+void create_tube2();
+
+int open_tube1();
+
+int open_tube2();
+
+void write_tube(int tube, int * result);
+
+void read_tube(int tube, int * result);
 
 void closetube(int tube);
+
+void prendre(int semId);
+
+void vendre(int semId);
 
 #endif

@@ -7,6 +7,11 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
+#include <assert.h>
+
 #include "myassert.h"
 
 #include "master_client.h"
