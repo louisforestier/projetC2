@@ -36,7 +36,7 @@ void create_tube1()
 void create_tube2(){
   int tube2 = mkfifo(TUBE_MASTER_CLIENT, 0641);
   assert(tube2 != -1);
-  printf("le tube master client vient d'etre crée");
+  printf("le tube master client vient d'etre crée\n");
 }
 
 //==========================================================================
@@ -65,7 +65,7 @@ void closetube(int tube)
 {
   int g = close(tube);
   assert(g == 0);
-  printf("le tube est fermer");
+  printf("le tube est fermer\n");
 }
 
 //========================================================================
