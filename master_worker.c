@@ -25,7 +25,7 @@ void execWorker(int tube_precedent, int tube_w_m, int p)
   sprintf(s_p, "%d", p);
   char * argv[] = {"worker", s_tube_precedent, s_tube_w_m, s_p, NULL } ;
   int execv_return = execv("worker", argv);
-  myassert(execv_return == 0, "échec execv worker");
+  myassert(execv_return == 0, "echec execv worker");
 } 
 
 //========================================================================
@@ -48,7 +48,7 @@ void ourwrite(int fd, void * content, int size)
 
 
 //========================================================================
-//fermeture tube nommés
+//fermeture tube 
 
 void ourclose(int fd)
 {

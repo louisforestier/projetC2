@@ -67,8 +67,10 @@ static void creerWorkerSuivant(worker * data, int n)
     execWorker(pipefd[0], data->tube_w_m, n);
     
   } else {
+    
     ourclose(pipefd[0]);
     data->tube_suivant = pipefd[1];
+    
   }
 }
 
