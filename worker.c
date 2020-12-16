@@ -62,16 +62,15 @@ static void creerWorkerSuivant(worker * data, int n)
   int s_pid = fork();
   myassert(s_pid != -1, "echec création de worker");
   if (s_pid == 0){
-    r_close = close(pipefd[1]);
-    myassert(r_close == 0, "echec fermeture écriture tube anonyme par worker fils");
+
+    ourclose(pipefd[1]);
     execWorker(pipefd[0], data->tube_w_m, n);
+    
   } else {
-    r_close = close(pipefd[0]);
-    myassert(r_close == 0, "echec fermeture écriture tube anonyme par worker pere");
+    ourclose(pipefd[0]);
     data->tube_suivant = pipefd[1];
   }
 }
-
 
 
 /************************************************************************
