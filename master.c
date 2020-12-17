@@ -64,7 +64,7 @@ void order_stop(int tube_m_w, int tube_m_c, bool *end) {
   ourwrite(tube_m_w, &send, sizeof(int));
   write_tube(tube_m_c, &reponse);
   *end = true;
-  int w = wait();
+  int w = wait(NULL);
   assert(w != -1);
 }
 
