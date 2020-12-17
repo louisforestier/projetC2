@@ -1,3 +1,5 @@
+//clementine guillot & Louis forestier
+
 #if defined HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -9,8 +11,6 @@
 #include "myassert.h"
 
 #include "master_worker.h"
-
-//clementine guillot & Louis forestier
 
 //========================================================================
 //exec d'un worker

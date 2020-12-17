@@ -1,3 +1,5 @@
+//clementine guillot & Louis forestier
+
 #if defined HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -18,9 +20,6 @@
 #include "myassert.h"
 
 #include "master_client.h"
-
-// fonctions éventuelles proposées dans le .h
-
 
 
 //==========================================================================
