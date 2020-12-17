@@ -11,15 +11,24 @@
 #include <sys/sem.h>
 #include <assert.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #include "myassert.h"
 
 #include "master_client.h"
 #include "master_worker.h"
 
+
+//clementine guillot & Louis forestier
+
+
 /************************************************************************
  * Donn√©es persistantes d'un master
  ************************************************************************/
+
+static int nbCalcul = 0;
+static int highestPrime = 0;
+
 
 // on peut ici d√©finir une structure stockant tout ce dont le master
 // a besoin
@@ -48,7 +57,7 @@ static void usage(const char *exeName, const char *message)
 /************************************************************************
  * boucle principale de communication avec le client
  ************************************************************************/
-void loop(int mutex, int tube_m_w, int tube_w_m, int * nbCalcul, int * highestPrime)
+void loop(int mutex, int tube_m_w, int tube_w_m)
 {
   // boucle infinie :
   // - ouverture des tubes (cf. rq client.c)
@@ -86,39 +95,21 @@ void loop(int mutex, int tube_m_w, int tube_w_m, int * nbCalcul, int * highestPr
     
     read_tube(tube_c_m, &order);
     switch(order)
-      {
-      case ORDER_NONE :
-	printf("il ne se passe rien\n");
-	write_tube(tube_m_c, &reponse);
-	break;
-	
+      {	
       case ORDER_STOP :
-	printf("envoie ordre de fin au premier worker\n");
-	int send = -1; 
-        ourwrite(tube_m_w, &send, sizeof(int));
-	ourread(tube_w_m, &reponse, sizeof(int));
-	write_tube(tube_m_c, &reponse);
-	end = true;
+        order_stop(tube_m_w, tube_w_m, &reponse, tube_m_c, &end);
 	break;
 	
       case ORDER_COMPUTE_PRIME :
-	read_tube(tube_c_m, &nb_test);
-	printf("envoie aux worker\n");
-        ourwrite(tube_m_w, &nb_test, sizeof(int));
-	ourread(tube_w_m, &reponse, sizeof(int));
-	write_tube(tube_m_c, &reponse);
-	
-	*nbCalcul += 1;
-	if (reponse2 && *highestPrime < nb_test)
-	  *highestPrime = nb_test;
+	order_compute_prime(tube_c_m, &nb_test, tube_m_w, tube_w_m, &reponse, tube_m_c);
 	break;
 	
       case ORDER_HOW_MANY_PRIME :
-	write_tube(tube_m_c, nbCalcul);
+	write_tube(tube_m_c, &nbCalcul);
 	break;
 	
       case ORDER_HIGHEST_PRIME :
-	write_tube(tube_m_c, highestPrime);
+	write_tube(tube_m_c, &highestPrime);
 	break;
 	
       default : printf("cette commande ne correspond ÔøΩ rien\n");
@@ -129,13 +120,43 @@ void loop(int mutex, int tube_m_w, int tube_w_m, int * nbCalcul, int * highestPr
   }
 }
 
+//==========================================================================
+//sous fonctions du switch case
 
+void order_stop(int tube_m_w, int tube_w_m, int tube_m_c, bool *end) {
+  printf("envoie ordre de fin au premier worker\n");
+  int send = -1;
+  int reponse = 0;
+  ourwrite(tube_m_w, &send, sizeof(int));
+  write_tube(tube_m_c, &reponse);
+  *end = true;
+  int w = wait();
+  assert(w != -1);
+}
 
-
-
+void order_compute_prime(int tube_c_m, int * nb_test, int tube_m_w, int tube_w_m,
+			 int * reponse, int tube_m_c){
+  read_tube(tube_c_m, nb_test);
+  printf("envoie aux worker\n");
+  
+  if(*nb_test > highestPrime){
+    for(int i = highestPrime + 1 ; i < *nb_test ; i++){
+      ourwrite(tube_m_w, &i, sizeof(int));
+      ourread(tube_w_m, reponse, sizeof(int));
+    }
+  }
+  
+  ourwrite(tube_m_w, nb_test, sizeof(int));
+  ourread(tube_w_m, reponse, sizeof(int));
+  write_tube(tube_m_c, reponse);
+	
+  nbCalcul += 1;
+  if (*reponse && highestPrime < *nb_test)
+    highestPrime = *nb_test;
+}
 
 //===========================================================================
-//crÔøΩation sÔøΩmaphore pour les clients
+//creation semaphore pour les clients
 
 static int create_mutex_syncronisation()
 {
@@ -183,6 +204,7 @@ int main(int argc, char * argv[])
   assert(p1 != -1);
   int p2 = pipe(tube_w_m);
   assert(p2 != -1);
+  printf("les tubes anonymes ont ÈtÈ crÈes\n");
 
   int pid = fork();
   assert(pid != -1);
@@ -194,14 +216,10 @@ int main(int argc, char * argv[])
   } else {
     ourclose(tube_w_m[1]);
     ourclose(tube_m_w[0]);
-  }
-
-  static int nbCalcul = 0;
-  static int highestPrime = 0;
-    
+  } 
 
   // boucle infinie
-  loop(mutex_syn, tube_m_w[1], tube_w_m[0], &nbCalcul, &highestPrime);
+  loop(mutex_syn, tube_m_w[1], tube_w_m[0]);
 
   // destruction des tubes nomm√©s, des s√©maphores, ...
   int d1 = semctl(mutex_syn, -1, IPC_RMID);

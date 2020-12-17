@@ -10,7 +10,7 @@
 
 #include "master_worker.h"
 
-// fonctions éventuelles proposées dans le .h
+//clementine guillot & Louis forestier
 
 //========================================================================
 //exec d'un worker
