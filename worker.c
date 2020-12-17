@@ -98,23 +98,22 @@ void loop(worker * data)
     if (n == -1){
       if (data->tube_suivant != -1){
 	
-  	int status;
         ourwrite(data->tube_suivant, &n, sizeof(int));
-  	int wait_return = wait(&status);
+  	int wait_return = wait();
   	myassert(wait_return != -1, "pas de fils à attendre");
       }
       end = true;
       
     } else {
       
-      bool result;
+      int result;
       if (n == data->p){
-  	result = true;
-  	ourwrite(data->tube_w_m, &result, sizeof(bool));
+  	result = 1;
+  	ourwrite(data->tube_w_m, &result, sizeof(int));
 	
       } else if (n % data->p == 0){
-  	result = false;
-  	ourwrite(data->tube_w_m, &result, sizeof(bool));
+  	result = 0;
+  	ourwrite(data->tube_w_m, &result, sizeof(int));
 	
       } else if (data->tube_suivant != -1){
   	ourwrite(data->tube_suivant, &n, sizeof(int));

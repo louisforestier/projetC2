@@ -83,7 +83,6 @@ void loop(int mutex, int tube_m_w, int tube_w_m, int * nbCalcul, int * highestPr
     int order;
     int nb_test;
     int reponse = -1;
-    bool reponse2 = false;
     
     read_tube(tube_c_m, &order);
     switch(order)
@@ -97,8 +96,7 @@ void loop(int mutex, int tube_m_w, int tube_w_m, int * nbCalcul, int * highestPr
 	printf("envoie ordre de fin au premier worker\n");
 	int send = -1; 
         ourwrite(tube_m_w, &send, sizeof(int));
-	ourread(tube_w_m, &reponse2, sizeof(bool));
-	reponse = (int) reponse2;
+	ourread(tube_w_m, &reponse, sizeof(int));
 	write_tube(tube_m_c, &reponse);
 	end = true;
 	break;
@@ -107,8 +105,7 @@ void loop(int mutex, int tube_m_w, int tube_w_m, int * nbCalcul, int * highestPr
 	read_tube(tube_c_m, &nb_test);
 	printf("envoie aux worker\n");
         ourwrite(tube_m_w, &nb_test, sizeof(int));
-	ourread(tube_w_m, &reponse, sizeof(bool));
-	reponse = (int) reponse2;
+	ourread(tube_w_m, &reponse, sizeof(int));
 	write_tube(tube_m_c, &reponse);
 	
 	*nbCalcul += 1;
