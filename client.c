@@ -1,5 +1,6 @@
 //clementine guillot & Louis forestier
 
+
 #if defined HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -20,7 +21,7 @@
 
 #include "master_client.h"
 
-// chaines possibles pour le premier paramètre de la ligne de commande
+// chaines possibles pour le premier paramÃ¨tre de la ligne de commande
 #define TK_STOP      "stop"
 #define TK_COMPUTE   "compute"
 #define TK_HOW_MANY  "howmany"
@@ -28,17 +29,17 @@
 #define TK_LOCAL     "local"
 
 /************************************************************************
- * Usage et analyse des arguments passés en ligne de commande
+ * Usage et analyse des arguments passÃ©s en ligne de commande
  ************************************************************************/
 
 static void usage(const char *exeName, const char *message)
 {
     fprintf(stderr, "usage : %s <ordre> [<number>]\n", exeName);
-    fprintf(stderr, "   ordre \"" TK_STOP  "\" : arrêt master\n");
+    fprintf(stderr, "   ordre \"" TK_STOP  "\" : arrÃªt master\n");
     fprintf(stderr, "   ordre \"" TK_COMPUTE  "\" : calcul de nombre premier\n");
-    fprintf(stderr, "                       <nombre> doit être fourni\n");
-    fprintf(stderr, "   ordre \"" TK_HOW_MANY "\" : combien de nombres premiers calculés\n");
-    fprintf(stderr, "   ordre \"" TK_HIGHEST "\" : quel est le plus grand nombre premier calculé\n");
+    fprintf(stderr, "                       <nombre> doit Ãªtre fourni\n");
+    fprintf(stderr, "   ordre \"" TK_HOW_MANY "\" : combien de nombres premiers calculÃ©s\n");
+    fprintf(stderr, "   ordre \"" TK_HIGHEST "\" : quel est le plus grand nombre premier calculÃ©\n");
     fprintf(stderr, "   ordre \"" TK_LOCAL  "\" : calcul de nombre premier en local\n");
     if (message != NULL)
         fprintf(stderr, "message : %s\n", message);
@@ -79,7 +80,7 @@ static int parseArgs(int argc, char * argv[], int *number)
     {
         *number = strtol(argv[2], NULL, 10);
         if (*number < 2)
-             usage(argv[0], "le nombre doit être >= 2");
+             usage(argv[0], "le nombre doit Ãªtre >= 2");
     }       
     
     return order;
@@ -100,7 +101,7 @@ static int my_semget(const int id)
 /************************************************************************
  * Calcul en multithread
  ************************************************************************/
-
+ 
 typedef struct
 {
   int n;
@@ -119,7 +120,7 @@ void *codeThread(void *arg)
 
 //========================================================================
 
-void localCompute(int n)
+ void localCompute(int n)
 {
   bool is_prime = true;
   int sqrt_n = (int)round(sqrt((double)n)) ;
@@ -128,10 +129,10 @@ void localCompute(int n)
   pthread_t * tabId = malloc (sizeof(pthread_t) * (sqrt_n - 1));
   bool * tab = malloc (sizeof(bool) * (sqrt_n - 1));
 
-  //On va de 2 jusqu'� racine de n comprise pour que les nombres
-  //inf�rieurs � 10 soit trait�s correctement.
+  //On va de 2 jusqu'à racine de n comprise pour que les nombres
+  //inférieurs à 10 soit traités correctement.
 
-  //On cr�e les donn�es pour les threads.
+  //On crée les données pour les threads.
   for(int i = 2; i <= sqrt_n ; i++){
     datas[i].n = n;
     datas[i].numero = i;
@@ -148,12 +149,12 @@ void localCompute(int n)
     pthread_join(tabId[i], NULL);
   }
 
-  //On v�rifie les valeurs du tableau de bool.
+  //On vérifie les valeurs du tableau de bool.
   for (int i = 2; i <= sqrt_n ; i++){
     is_prime = is_prime && tab[i-2];
   }
 
-  //On lib�re ce qui a �t� allou�.
+  //On libère ce qui a été alloué.
   free(tabId);
   free(tab);
   free(datas);
@@ -163,6 +164,36 @@ void localCompute(int n)
   else
     printf("Le nombre %d n'est pas premier.\n", n);
 }
+
+
+//==========================================================================
+//fonction interpret anwer
+
+static void interpret(int order, int answer)
+{ 
+  switch(order){ 
+    case ORDER_STOP :
+      if(answer == 0)
+	printf("Le master s'est arrêté correctement.\n");
+      else
+	printf("Le master ne s'est pas arrêté correctement.\n");
+      break;
+    case ORDER_COMPUTE_PRIME :
+      if(answer == 0)
+	printf("Ce nombre n'est pas premier.\n");
+      else
+	printf("Ce nomre est premier.\n");
+      break;
+      
+    case ORDER_HOW_MANY_PRIME :
+      printf("Le master a calculé %d nombre premiers.\n", answer);
+      break;
+      
+    case ORDER_HIGHEST_PRIME :
+      printf("Le plus grand nombre premier calculé par le master est %d.\n", answer);
+      break;
+  }
+} 
 
 
 /************************************************************************
@@ -185,25 +216,25 @@ int main(int argc, char * argv[])
     //      - ORDER_HIGHEST_PRIME
     //
     // si c'est ORDER_COMPUTE_PRIME_LOCAL
-    //    alors c'est un code complètement à part multi-thread
+    //    alors c'est un code complÃ¨tement Ã  part multi-thread
     // sinon
     //    - entrer en section critique :
-    //           . pour empêcher que 2 clients communiquent simultanément
-    //           . le mutex est déjà créé par le master
-    //    - ouvrir les tubes nommés (ils sont déjà créés par le master)
+    //           . pour empÃªcher que 2 clients communiquent simultanÃ©ment
+    //           . le mutex est dÃ©jÃ  crÃ©Ã© par le master
+    //    - ouvrir les tubes nommÃ©s (ils sont dÃ©jÃ  crÃ©Ã©s par le master)
     //           . les ouvertures sont bloquantes, il faut s'assurer que
-    //             le master ouvre les tubes dans le même ordre
-    //    - envoyer l'ordre et les données éventuelles au master
-    //    - attendre la réponse sur le second tube
+    //             le master ouvre les tubes dans le mÃªme ordre
+    //    - envoyer l'ordre et les donnÃ©es Ã©ventuelles au master
+    //    - attendre la rÃ©ponse sur le second tube
     //    - sortir de la section critique
-    //    - libérer les ressources (fermeture des tubes, ...)
-    //    - débloquer le master grâce à un second sémaphore (cf. ci-dessous)
+    //    - libÃ©rer les ressources (fermeture des tubes, ...)
+    //    - dÃ©bloquer le master grÃ¢ce Ã  un second sÃ©maphore (cf. ci-dessous)
     // 
-    // Une fois que le master a envoyé la réponse au client, il se bloque
-    // sur un sémaphore ; le dernier point permet donc au master de continuer
+    // Une fois que le master a envoyÃ© la rÃ©ponse au client, il se bloque
+    // sur un sÃ©maphore ; le dernier point permet donc au master de continuer
     //
-    // N'hésitez pas à faire des fonctions annexes ; si la fonction main
-    // ne dépassait pas une trentaine de lignes, ce serait bien.
+    // N'hÃ©sitez pas Ã  faire des fonctions annexes ; si la fonction main
+    // ne dÃ©passait pas une trentaine de lignes, ce serait bien.
 
     if (order ==  ORDER_COMPUTE_PRIME_LOCAL) {
       localCompute(number);
@@ -229,6 +260,9 @@ int main(int argc, char * argv[])
 
       closetube(tube_c_m);
       closetube(tube_m_c);
+
+      interpret(order,answer);
+      
       vendre(synchro_id);
     }
     
@@ -236,9 +270,4 @@ int main(int argc, char * argv[])
 }
 
 
-//=============================================================================
-//fonction interprete r�ponse
 
-/* void interprete(int order, int reponse){ */
- 
-/* } */

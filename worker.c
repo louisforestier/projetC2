@@ -101,7 +101,7 @@ void loop(worker * data)
       if (data->tube_suivant != -1){
 	
         ourwrite(data->tube_suivant, &n, sizeof(int));
-  	int wait_return = wait();
+  	int wait_return = wait(NULL);
   	myassert(wait_return != -1, "pas de fils à attendre");
       }
       end = true;
