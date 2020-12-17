@@ -56,7 +56,6 @@ static void parseArgs(int argc, char * argv[], worker * data)
 static void creerWorkerSuivant(worker * data, int n)
 {
   int pipefd[2];
-  int r_close;
   int pipe_return = pipe(pipefd);
   myassert(pipe_return >= 0, "echec création tube anonyme vers worker suivant");
   int s_pid = fork();

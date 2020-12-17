@@ -124,7 +124,7 @@ void loop(int mutex, int tube_m_w, int tube_w_m, int * nbCalcul, int * highestPr
 	write_tube(tube_m_c, highestPrime);
 	break;
 	
-      default : printf("cette commande ne correspond à rien\n");
+      default : printf("cette commande ne correspond ï¿½ rien\n");
       }
     closetube(tube_c_m);
     closetube(tube_m_c);
@@ -138,7 +138,7 @@ void loop(int mutex, int tube_m_w, int tube_w_m, int * nbCalcul, int * highestPr
 
 
 //===========================================================================
-//création sémaphore pour les clients
+//crï¿½ation sï¿½maphore pour les clients
 
 static int create_mutex_syncronisation()
 {
@@ -192,7 +192,11 @@ int main(int argc, char * argv[])
 
   if(pid == 0){
     ourclose(tube_m_w[1]);
+    ourclose(tube_w_m[0]);
     execWorker(tube_m_w[0], tube_w_m[1], 2);
+  } else {
+    ourclose(tube_w_m[1]);
+    ourclose(tube_m_w[0]);
   }
 
   static int nbCalcul = 0;
@@ -207,13 +211,13 @@ int main(int argc, char * argv[])
   assert(d1 != -1);
   int d2 = semctl(mutex_secc, -1, IPC_RMID);
   assert(d2 != -1);
-  printf("les semaphores sont détruis\n");
+  printf("les semaphores sont dï¿½truis\n");
 
   int d3 = remove(TUBE_CLIENT_MASTER);
   assert(d3 == 0);
   int d4 = remove(TUBE_MASTER_CLIENT);
   assert(d4 == 0);
-  printf("les tubes nommées ont été détruis\n");
+  printf("les tubes nommï¿½es ont ï¿½tï¿½ dï¿½truis\n");
 
   return EXIT_SUCCESS;
 }

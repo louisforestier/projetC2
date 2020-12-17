@@ -33,8 +33,8 @@ void execWorker(int tube_precedent, int tube_w_m, int p)
 
 void ourread(int fd, void * content, int size)
 {
-  int w = write(fd, content, size);
-  myassert(w != -1, "echec ecriture tube");
+  int r = read(fd, content, size);
+  myassert(r != -1, "echec ecriture tube");
 }
 
 //========================================================================
@@ -42,8 +42,8 @@ void ourread(int fd, void * content, int size)
 
 void ourwrite(int fd, void * content, int size)
 {
-  int r = read(fd, content, size);
-  myassert(r >= 0, "echec lecture tube");
+  int w = write(fd, content, size);
+  myassert(w != -1, "echec lecture tube");
 }
 
 
