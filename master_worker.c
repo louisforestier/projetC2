@@ -31,18 +31,18 @@ void execWorker(int tube_precedent, int tube_w_m, int p)
 //========================================================================
 //écriture dans un tube
 
-void ourread(int fd, void * content, int size)
+void ourread(int fd, int * result)
 {
-  int r = read(fd, content, size);
+  int r = read(fd, result, sizeof(int));
   myassert(r != -1, "echec ecriture tube");
 }
 
 //========================================================================
 //lecture dans un tube
 
-void ourwrite(int fd, void * content, int size)
+void ourwrite(int fd, int * result)
 {
-  int w = write(fd, content, size);
+  int w = write(fd, result, sizeof(int));
   myassert(w != -1, "echec lecture tube");
 }
 
@@ -54,5 +54,4 @@ void ourclose(int fd)
 {
   int g = close(fd);
   myassert(g == 0, "echec close");
-  printf("le tube est ferme\n");
 }

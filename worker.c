@@ -1,5 +1,3 @@
-//clementine guillot & Louis forestier
-
 #if defined HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -14,6 +12,9 @@
 #include "myassert.h"
 
 #include "master_worker.h"
+
+//Clementine Guillot & Louis Forestier
+
 
 /************************************************************************
  * Données persistantes d'un worker
@@ -82,43 +83,33 @@ static void creerWorkerSuivant(worker * data, int n)
 
 void loop(worker * data)
 {
-  // boucle infinie :
-  //    attendre l'arrivée d'un nombre à tester
-  //    si ordre d'arrêt
-  //       si il y a un worker suivant, transmettre l'ordre et attendre sa fin
-  //       sortir de la boucle
-  //    sinon c'est un nombre à tester, 4 possibilités :
-  //           - le nombre est premier
-  //           - le nombre n'est pas premier
-  //           - s'il y a un worker suivant lui transmettre le nombre
-  //           - s'il n'y a pas de worker suivant, le créer
   bool end = false;
   int n;
   while(!end){
-    ourread(data->tube_precedent, &n, sizeof(int));
+    ourread(data->tube_precedent, &n);
     
-    if (n == -1){
+    if (n == STOP_SIGNAL){
       if (data->tube_suivant != -1){
 	
-        ourwrite(data->tube_suivant, &n, sizeof(int));
+        ourwrite(data->tube_suivant, &n);
   	int wait_return = wait(NULL);
   	myassert(wait_return != -1, "pas de fils à attendre");
       }
       end = true;
       
     } else {
-      
+
       int result;
       if (n == data->p){
-  	result = 1;
-  	ourwrite(data->tube_w_m, &result, sizeof(int));
+	result = IS_PRIME;
+  	ourwrite(data->tube_w_m, &result);
 	
-      } else if (n % data->p == 0){
-  	result = 0;
-  	ourwrite(data->tube_w_m, &result, sizeof(int));
+      } else if ((n % data->p) == 0){
+  	result = IS_NOT_PRIME;
+  	ourwrite(data->tube_w_m, &result);
 	
       } else if (data->tube_suivant != -1){
-  	ourwrite(data->tube_suivant, &n, sizeof(int));
+  	ourwrite(data->tube_suivant, &n);
 	
       } else {
 	creerWorkerSuivant(data, n);
@@ -135,21 +126,16 @@ int main(int argc, char * argv[])
 {
   worker data;
   parseArgs(argc, argv, &data);
-    
-  // Si on est créé c'est qu'on est un nombre premier
-  // Envoyer au master un message positif pour dire
-  // que le nombre testé est bien premier
 
-  bool is_prime = true;
-  ourwrite(data.tube_w_m, &is_prime, sizeof(bool));
+  int is_prime = IS_PRIME;
+  ourwrite(data.tube_w_m, &is_prime);
 
 
   loop(&data);
   
-  // libérer les ressources : fermeture des files descriptors par exemple
-
   ourclose(data.tube_w_m);
   ourclose(data.tube_precedent);
+  
   if (data.tube_suivant != -1)
     ourclose(data.tube_suivant);
   

@@ -28,14 +28,12 @@
 void create_tube1()
 {
   int tube1 = mkfifo(TUBE_CLIENT_MASTER, 0641);
-  myassert(tube1 != -1, "pk ca plante");
-  printf("le tube client master vient d'etre crée\n");
+  assert(tube1 != -1);
 }
 
 void create_tube2(){
   int tube2 = mkfifo(TUBE_MASTER_CLIENT, 0641);
   assert(tube2 != -1);
-  printf("le tube master client vient d'etre crée\n");
 }
 
 //==========================================================================
@@ -45,7 +43,6 @@ int open_tube_lecture(char * file)
 {
   int tube1 = open(file, O_RDONLY);
   assert(tube1 != -1);
-  printf("le tube vient d'etre ouvert en lecture\n");
   return tube1;
 }
 
@@ -53,7 +50,6 @@ int open_tube_ecriture(char * file)
 {
   int tube2 = open(file, O_WRONLY);
   assert(tube2 != -1);
-  printf("le tube vient d'etre ouvert en ecriture\n");
   return tube2;
 }
 
@@ -64,7 +60,6 @@ void closetube(int tube)
 {
   int g = close(tube);
   assert(g == 0);
-  printf("le tube est fermer\n");
 }
 
 //========================================================================

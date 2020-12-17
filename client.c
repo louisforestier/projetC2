@@ -1,6 +1,3 @@
-//clementine guillot & Louis forestier
-
-
 #if defined HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -20,6 +17,10 @@
 #include "myassert.h"
 
 #include "master_client.h"
+
+
+//Clementine Guillot & Louis Forestier
+
 
 // chaines possibles pour le premier paramÃ¨tre de la ligne de commande
 #define TK_STOP      "stop"
@@ -133,25 +134,25 @@ void *codeThread(void *arg)
   //inférieurs à 10 soit traités correctement.
 
   //On crée les données pour les threads.
-  for(int i = 2; i <= sqrt_n ; i++){
+  for(int i = 0; i <= sqrt_n - 2 ; i++){
     datas[i].n = n;
-    datas[i].numero = i;
-    datas[i].tab = tab+(i-2);
+    datas[i].numero = i+2;
+    datas[i].tab = tab+i;
   }
 
   //On lance les threads.
-  for (int i = 2; i <= sqrt_n ; i++){
-    pthread_create(&(tabId[i-2]), NULL, codeThread, &(datas[i-2]));
+  for (int i = 0; i <= sqrt_n - 2 ; i++){
+    pthread_create(&(tabId[i]), NULL, codeThread, &(datas[i]));
   }
 
   //On attend qu'ils se soient tous finis.
-  for (int i = 2; i <= sqrt_n ; i++){
+  for (int i = 0 ; i <= sqrt_n - 2 ; i++){
     pthread_join(tabId[i], NULL);
   }
 
   //On vérifie les valeurs du tableau de bool.
-  for (int i = 2; i <= sqrt_n ; i++){
-    is_prime = is_prime && tab[i-2];
+  for (int i = 0 ; i <= sqrt_n - 2 ; i++){
+    is_prime = is_prime && tab[i];
   }
 
   //On libère ce qui a été alloué.
@@ -174,9 +175,9 @@ static void interpret(int order, int answer)
   switch(order){ 
     case ORDER_STOP :
       if(answer == 0)
-	printf("Le master s'est arrêté correctement.\n");
+	printf("Le master s'est arrete correctement.\n");
       else
-	printf("Le master ne s'est pas arrêté correctement.\n");
+	printf("Le master ne s'est pas arrete correctement.\n");
       break;
     case ORDER_COMPUTE_PRIME :
       if(answer == 0)
@@ -186,7 +187,7 @@ static void interpret(int order, int answer)
       break;
       
     case ORDER_HOW_MANY_PRIME :
-      printf("Le master a calculé %d nombre premiers.\n", answer);
+      printf("Le master a calculé %d nombre(s) premier(s).\n", answer);
       break;
       
     case ORDER_HIGHEST_PRIME :
@@ -208,63 +209,33 @@ int main(int argc, char * argv[])
     int section_critique_id = my_semget(PROJ_ID_SEC_CRITIQUE);
 
 
-    // order peut valoir 5 valeurs (cf. master_client.h) :
-    //      - ORDER_COMPUTE_PRIME_LOCAL
-    //      - ORDER_STOP
-    //      - ORDER_COMPUTE_PRIME
-    //      - ORDER_HOW_MANY_PRIME
-    //      - ORDER_HIGHEST_PRIME
-    //
-    // si c'est ORDER_COMPUTE_PRIME_LOCAL
-    //    alors c'est un code complÃ¨tement Ã  part multi-thread
-    // sinon
-    //    - entrer en section critique :
-    //           . pour empÃªcher que 2 clients communiquent simultanÃ©ment
-    //           . le mutex est dÃ©jÃ  crÃ©Ã© par le master
-    //    - ouvrir les tubes nommÃ©s (ils sont dÃ©jÃ  crÃ©Ã©s par le master)
-    //           . les ouvertures sont bloquantes, il faut s'assurer que
-    //             le master ouvre les tubes dans le mÃªme ordre
-    //    - envoyer l'ordre et les donnÃ©es Ã©ventuelles au master
-    //    - attendre la rÃ©ponse sur le second tube
-    //    - sortir de la section critique
-    //    - libÃ©rer les ressources (fermeture des tubes, ...)
-    //    - dÃ©bloquer le master grÃ¢ce Ã  un second sÃ©maphore (cf. ci-dessous)
-    // 
-    // Une fois que le master a envoyÃ© la rÃ©ponse au client, il se bloque
-    // sur un sÃ©maphore ; le dernier point permet donc au master de continuer
-    //
-    // N'hÃ©sitez pas Ã  faire des fonctions annexes ; si la fonction main
-    // ne dÃ©passait pas une trentaine de lignes, ce serait bien.
+    if (order ==  ORDER_COMPUTE_PRIME_LOCAL)
+      {
+	localCompute(number);
+      }
+    else
+      {
+	int answer;
+	prendre(section_critique_id);
 
-    if (order ==  ORDER_COMPUTE_PRIME_LOCAL) {
-      localCompute(number);
-    } else {
-      int answer;
-      prendre(section_critique_id);
-      printf("debut section critique\n");
+	int tube_c_m = open_tube_ecriture(TUBE_CLIENT_MASTER);
+	int tube_m_c = open_tube_lecture(TUBE_MASTER_CLIENT);
+	
+	write_tube(tube_c_m,&order);
+	if (order == ORDER_COMPUTE_PRIME)
+	  write_tube(tube_c_m, &number);
 
-      int tube_c_m = open_tube_ecriture(TUBE_CLIENT_MASTER);
-      printf("ouverture tube1\n");
+	read_tube(tube_m_c, &answer);
+	
+	vendre(section_critique_id);
 
-      int tube_m_c = open_tube_lecture(TUBE_MASTER_CLIENT);
-      printf("ouverture tube2\n");
-      printf("%d\n", order);
-      write_tube(tube_c_m,&order);
-      if (order == ORDER_COMPUTE_PRIME)
-	write_tube(tube_c_m, &number);
-      printf("avant read\n");
+	closetube(tube_c_m);
+	closetube(tube_m_c);
 
-      read_tube(tube_m_c, &answer);
-      vendre(section_critique_id);
-      printf("fin section critique\n");
-
-      closetube(tube_c_m);
-      closetube(tube_m_c);
-
-      interpret(order,answer);
+	interpret(order,answer);
       
-      vendre(synchro_id);
-    }
+	vendre(synchro_id);
+      }
     
     return EXIT_SUCCESS;
 }
