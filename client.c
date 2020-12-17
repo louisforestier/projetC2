@@ -6,11 +6,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <math.h>
 
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <assert.h>
+#include <pthread.h>
 
 #include "myassert.h"
 
@@ -94,6 +96,74 @@ static int my_semget(const int id)
 
 
 /************************************************************************
+ * Calcul en multithread
+ ************************************************************************/
+
+typedef struct
+{
+  int n;
+  int numero;
+  bool *tab;
+} ThreadData;
+
+//========================================================================
+
+void *codeThread(void *arg)
+{
+  ThreadData *data = (ThreadData *)arg;
+  *(data->tab) = ((data->n % data->numero) != 0);
+  return NULL;
+}
+
+//========================================================================
+
+void localCompute(int n)
+{
+  bool is_prime = true;
+  int sqrt_n = (int)round(sqrt((double)n)) ;
+  
+  ThreadData * datas = malloc(sizeof(ThreadData) * (sqrt_n - 1));
+  pthread_t * tabId = malloc (sizeof(pthread_t) * (sqrt_n - 1));
+  bool * tab = malloc (sizeof(bool) * (sqrt_n - 1));
+
+  //On va de 2 jusqu'à racine de n comprise pour que les nombres
+  //inférieurs à 10 soit traités correctement.
+
+  //On crée les données pour les threads.
+  for(int i = 2; i <= sqrt_n ; i++){
+    datas[i].n = n;
+    datas[i].numero = i;
+    datas[i].tab = tab+(i-2);
+  }
+
+  //On lance les threads.
+  for (int i = 2; i <= sqrt_n ; i++){
+    pthread_create(&(tabId[i-2]), NULL, codeThread, &(datas[i-2]));
+  }
+
+  //On attend qu'ils se soient tous finis.
+  for (int i = 2; i <= sqrt_n ; i++){
+    pthread_join(tabId[i], NULL);
+  }
+
+  //On vérifie les valeurs du tableau de bool.
+  for (int i = 2; i <= sqrt_n ; i++){
+    is_prime = is_prime && tab[i-2];
+  }
+
+  //On libère ce qui a été alloué.
+  free(tabId);
+  free(tab);
+  free(datas);
+
+  if (is_prime)
+    printf("Le nombre %d est premier.\n", n);
+  else
+    printf("Le nombre %d n'est pas premier.\n", n);
+}
+
+
+/************************************************************************
  * Fonction principale
  ************************************************************************/
 
@@ -134,9 +204,8 @@ int main(int argc, char * argv[])
     // ne dÃ©passait pas une trentaine de lignes, ce serait bien.
 
     if (order ==  ORDER_COMPUTE_PRIME_LOCAL) {
-      printf("code multi thread\n");
+      localCompute(number);
     } else {
-      printf("%d\n", order);
       int answer;
       prendre(section_critique_id);
       printf("debut section critique\n");
@@ -146,7 +215,7 @@ int main(int argc, char * argv[])
 
       int tube_m_c = open_tube_lecture(TUBE_MASTER_CLIENT);
       printf("ouverture tube2\n");
-
+      printf("%d\n", order);
       write_tube(tube_c_m,&order);
       if (order == ORDER_COMPUTE_PRIME)
 	write_tube(tube_c_m, &number);
