@@ -54,6 +54,42 @@ static void usage(const char *exeName, const char *message)
 }
 
 
+//==========================================================================
+//sous fonctions du switch case
+
+void order_stop(int tube_m_w, int tube_m_c, bool *end) {
+  printf("envoie ordre de fin au premier worker\n");
+  int send = -1;
+  int reponse = 0;
+  ourwrite(tube_m_w, &send, sizeof(int));
+  write_tube(tube_m_c, &reponse);
+  *end = true;
+  int w = wait();
+  assert(w != -1);
+}
+
+void order_compute_prime(int tube_c_m, int * nb_test, int tube_m_w, int tube_w_m,
+			 int * reponse, int tube_m_c){
+  read_tube(tube_c_m, nb_test);
+  printf("envoie aux worker\n");
+  
+  if(*nb_test > highestPrime){
+    for(int i = highestPrime + 1 ; i < *nb_test ; i++){
+      ourwrite(tube_m_w, &i, sizeof(int));
+      ourread(tube_w_m, reponse, sizeof(int));
+    }
+  }
+  
+  ourwrite(tube_m_w, nb_test, sizeof(int));
+  ourread(tube_w_m, reponse, sizeof(int));
+  write_tube(tube_m_c, reponse);
+	
+  nbCalcul += 1;
+  if (*reponse && highestPrime < *nb_test)
+    highestPrime = *nb_test;
+}
+
+
 /************************************************************************
  * boucle principale de communication avec le client
  ************************************************************************/
@@ -97,7 +133,7 @@ void loop(int mutex, int tube_m_w, int tube_w_m)
     switch(order)
       {	
       case ORDER_STOP :
-        order_stop(tube_m_w, tube_w_m, &reponse, tube_m_c, &end);
+        order_stop(tube_m_w, tube_m_c, &end);
 	break;
 	
       case ORDER_COMPUTE_PRIME :
@@ -120,40 +156,7 @@ void loop(int mutex, int tube_m_w, int tube_w_m)
   }
 }
 
-//==========================================================================
-//sous fonctions du switch case
 
-void order_stop(int tube_m_w, int tube_w_m, int tube_m_c, bool *end) {
-  printf("envoie ordre de fin au premier worker\n");
-  int send = -1;
-  int reponse = 0;
-  ourwrite(tube_m_w, &send, sizeof(int));
-  write_tube(tube_m_c, &reponse);
-  *end = true;
-  int w = wait();
-  assert(w != -1);
-}
-
-void order_compute_prime(int tube_c_m, int * nb_test, int tube_m_w, int tube_w_m,
-			 int * reponse, int tube_m_c){
-  read_tube(tube_c_m, nb_test);
-  printf("envoie aux worker\n");
-  
-  if(*nb_test > highestPrime){
-    for(int i = highestPrime + 1 ; i < *nb_test ; i++){
-      ourwrite(tube_m_w, &i, sizeof(int));
-      ourread(tube_w_m, reponse, sizeof(int));
-    }
-  }
-  
-  ourwrite(tube_m_w, nb_test, sizeof(int));
-  ourread(tube_w_m, reponse, sizeof(int));
-  write_tube(tube_m_c, reponse);
-	
-  nbCalcul += 1;
-  if (*reponse && highestPrime < *nb_test)
-    highestPrime = *nb_test;
-}
 
 //===========================================================================
 //creation semaphore pour les clients
